@@ -1,9 +1,7 @@
 # vertx-http2-apns
-create vertx-http2 impl APNS
-apns-http2
 
-A Java library for sending notifications via APNS using Apple's new HTTP/2 API. This library uses Netty4.
-Note: This is required until Java 7 is released.
+A Java library for sending notifications via APNS using Apple's new HTTP/2 API. This library uses Vertx.
+Note: This is required  Java 8 .
 
 Installation
 
