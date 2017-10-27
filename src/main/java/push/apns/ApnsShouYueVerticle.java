@@ -49,6 +49,9 @@ public class ApnsShouYueVerticle extends AbstractVerticle {
 	public void start() throws Exception {
 		super.start();
 
+		//初始化webclient
+		this.initWebClient();
+
 		eb = vertx.eventBus();
 		eb.<JsonObject>consumer(ApnsShouYueVerticle.class.getName() + "local", res -> {
 			String action = res.headers().get("action");
@@ -79,35 +82,9 @@ public class ApnsShouYueVerticle extends AbstractVerticle {
 	 * @param extend 其他
 	 */
 	private void apnsSend(String deviceToken, String title, String content, Extend extend)  {
-		WebClientOptions webClientOptions = new WebClientOptions();
-		webClientOptions.setProtocolVersion(HttpVersion.HTTP_2);
-		webClientOptions.setSsl(true);
-
-		/**
-         * implementations that support HTTP/2 over TLS
-		 * MUST use protocol negotiation in TLS [TLS-ALPN].
-		 * 标准的Java 8不支持ALPN，所以ALPN应该通过其他方式启用：
-		 * OpenSSL支持
-		 * Jetty-ALPN支持
-		 */
-		webClientOptions.setUseAlpn(true);
-		//webClientOptions.setSslEngineOptions(new OpenSSLEngineOptions());
-		//PKCS＃12格式的密钥/证书（http://en.wikipedia.org/wiki/PKCS_12），通常使用.pfx 或.p12
-		PfxOptions pfxOptions = new PfxOptions();
-		//设置密钥和路径
-		pfxOptions.setPath(KEY_STORE_PATH);
-		pfxOptions.setPassword(APNS_KEYSTORE_PWD);
-		//设置客户端信任证书
-		webClientOptions.setPfxKeyCertOptions(pfxOptions);
-		//另一种方式读取密钥
-		/*
-		Buffer buffer = Buffer.buffer(bytes);*/
-		/*Buffer buffer = vertx.fileSystem().readFileBlocking("d://apnsCert/apns_developer.p12");
-		pfxOptions.setValue(buffer);*/
-		
-		//创建webclient
-		webClient = WebClient.create(vertx,webClientOptions);
-
+		if(webClient == null){
+			this.initWebClient();
+		}
 		//设置请求报文体
 		JsonObject reqJson = Payload.newPayload()
 									.alertBody(content)//设置alert内容
@@ -138,5 +115,39 @@ public class ApnsShouYueVerticle extends AbstractVerticle {
 				logger.info("请求APNS服务器失败，失败原因={}",res.cause().getMessage());
 			}
 		});
+	}
+
+	/**
+	 * 初始化webclient
+	 */
+	public void initWebClient(){
+		WebClientOptions webClientOptions = new WebClientOptions();
+		webClientOptions.setProtocolVersion(HttpVersion.HTTP_2);
+		webClientOptions.setSsl(true);
+
+		/**
+		 * implementations that support HTTP/2 over TLS
+		 * MUST use protocol negotiation in TLS [TLS-ALPN].
+		 * 标准的Java 8不支持ALPN，所以ALPN应该通过其他方式启用：
+		 * OpenSSL支持
+		 * Jetty-ALPN支持
+		 */
+		webClientOptions.setUseAlpn(true);
+		//webClientOptions.setSslEngineOptions(new OpenSSLEngineOptions());
+		//PKCS＃12格式的密钥/证书（http://en.wikipedia.org/wiki/PKCS_12），通常使用.pfx 或.p12
+		PfxOptions pfxOptions = new PfxOptions();
+		//设置密钥和路径
+		pfxOptions.setPath(KEY_STORE_PATH);
+		pfxOptions.setPassword(APNS_KEYSTORE_PWD);
+		//设置客户端信任证书
+		webClientOptions.setPfxKeyCertOptions(pfxOptions);
+		//另一种方式读取密钥
+		/*
+		Buffer buffer = Buffer.buffer(bytes);*/
+		/*Buffer buffer = vertx.fileSystem().readFileBlocking("d://apnsCert/apns_developer.p12");
+		pfxOptions.setValue(buffer);*/
+
+		//创建webclient
+		webClient = WebClient.create(vertx,webClientOptions);
 	}
 }

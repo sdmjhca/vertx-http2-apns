@@ -11,9 +11,6 @@ public class ApnsVerticleTest {
 
 	public static void main(String[] args) {
 		Vertx vertx = Vertx.vertx();
-		DeploymentOptions options = new DeploymentOptions();
-		//请注意：Worker Verticle 和 HTTP/2 不兼容
-		vertx.deployVerticle(ApnsShouYueVerticle.class.getName(), options.setWorker(false));
 
 		EventBus eb = vertx.eventBus();
 
@@ -28,7 +25,11 @@ public class ApnsVerticleTest {
 		DeliveryOptions option = new DeliveryOptions();
 		option.addHeader("action", "apnsSend");
 
-		eb.send(ApnsShouYueVerticle.class.getName() + "local", JsonObject.mapFrom(msg), option);
+		DeploymentOptions options = new DeploymentOptions();
+		//请注意：Worker Verticle 和 HTTP/2 不兼容
+		vertx.deployVerticle(ApnsShouYueVerticle.class.getName(), options.setWorker(false),
+				res->eb.send(ApnsShouYueVerticle.class.getName() + "local", JsonObject.mapFrom(msg), option));
+
 	}
 
 }
